@@ -14,4 +14,4 @@ Please send questions, suggestions and bug reports to:
 jiali.zhuang@umassmed.edu
 
 
-laSV is a free software whose distribution is governed by the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.                                                                                                                           
+laSV is a free software whose distribution is governed by the terms of the GNU General Public License as published by the Free Software Foundation, version 3 or any later version.                                                                                                                           
