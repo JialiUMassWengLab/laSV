@@ -17,6 +17,7 @@ jiali.zhuang@umassmed.edu
 
 laSV is a free software whose distribution is governed by the terms of the GNU General Public License as published by the Free Software Foundation, version 3 or any later version. 
 
+
 ##Requirement and installation
 
 laSV runs on Linux X64 systems. The following are the software required by laSV:
@@ -34,6 +35,7 @@ For installing laSV first unzip the file. Then in the directory â€œlaSV_v1.0.2/â
 bash ./install.sh  
 make MAXK=k  
 where k is the the maximal k-mer size value (please supply either 31, 63, or 95).  
+
 
 
 ##Execution
