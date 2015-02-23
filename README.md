@@ -9,7 +9,7 @@ Weng Lab
 Programs in Bioinformatics and Integrative Biology  
 University of Massachusetts Medical School
 
-laSV is a software package for detecting structural variations from whole-genome sequencing data.
+laSV is a software that employs a local de novo assembly based approach to detect genomic structural variations from whole-genome high-throughput sequencing datasets.
 
 Please send questions, suggestions and bug reports to:  
 jiali.zhuang@umassmed.edu
