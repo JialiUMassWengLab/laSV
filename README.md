@@ -3,8 +3,8 @@
 laSV (Local Assembly based Structural Variation discovery tools)                                                        version 1.0.2  
 2015-02-05
 
-Jiali Zhuang(jiali.zhuang@umassmed.edu)
-Weng Lab
+Jiali Zhuang(jiali.zhuang@umassmed.edu)\n
+Weng Lab\n
 Programs in Bioinformatics and Integrative Biology
 University of Massachusetts Medical School
 
