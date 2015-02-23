@@ -31,7 +31,7 @@ Perl package BioPerl (http://www.bioperl.org/wiki/Main_Page).
 
 Please make sure these tools/software are properly installed and included in the path.   
 
-For installing laSV first unzip the file. Then in the directory “laSV_v1.0.2/” execute:  
+For installing laSV first unzip the file. Then in the directory “laSV_v1.0.x/” execute:  
 bash ./install.sh  
 make MAXK=k  
 where k is the the maximal k-mer size value (please supply either 31, 63, or 95).  
