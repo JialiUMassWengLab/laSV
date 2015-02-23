@@ -18,9 +18,6 @@ laSV is a free software whose distribution is governed by the terms of the GNU G
 
 
 
-laSV is a software that employs a local de novo assembly based approach to detect genomic structural variations from whole-genome high-throughput sequencing datasets. This document provides information concerning how to install and execute laSV, what do the parameters mean, and how to interpret the outputs. If you have any questions or find any bugs please contact Jiali Zhuang at jiali.zhuang@umassmed.edu. 
-
-
 
 
 Requirement and installation
