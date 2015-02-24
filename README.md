@@ -17,8 +17,10 @@ jiali.zhuang@umassmed.edu
 
 laSV is a free software whose distribution is governed by the terms of the GNU General Public License as published by the Free Software Foundation, version 3 or any later version. 
 
+Test dataset can be downloaded from laSV website: http://zlab.umassmed.edu/~zhuangj/laSV/  
 
-##Requirement and installation
+
+##Requirements and installation
 
 laSV runs on Linux X64 systems. The following are the software required by laSV:
 
