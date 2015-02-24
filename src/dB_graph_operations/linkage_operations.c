@@ -180,6 +180,8 @@ void assemble_contigs_from_a_single_source(dBNode* source, Orientation initial_o
     char contig[50000];
   } queue_node;
 
+  queue_node* dijkstra_queue;
+
   void print_one_contig(char* seq, unsigned short start, FILE* filename, unsigned int* num)
   {
     char* str_to_print = seq;
@@ -236,7 +238,7 @@ void assemble_contigs_from_a_single_source(dBNode* source, Orientation initial_o
       }
   }
 
-  void add_visited_node(queue_node* node, dBNode* previous)
+  void add_visited_node(queue_node* node, dBNode* previous, boolean* first_visit)
   {
     short visited_ptr=0;
     while ((visited_ptr < 100) && (node->visited[visited_ptr] != NULL)) {visited_ptr++;}
@@ -248,7 +250,13 @@ void assemble_contigs_from_a_single_source(dBNode* source, Orientation initial_o
 	node->passed[visited_ptr]  = previous;
 	node->dist[visited_ptr]    = strlen(node->contig);
       }
-    else {die("Too many visited nodes\nSet longer array\n\n");}
+    else 
+      {
+	//printf("Too many visited nodes\nSet longer array\n\n");
+	(*first_visit) = false;
+      }
+
+    return;
   }
 
   void run_along_a_supernode(queue_node* node, dBNode* previous_dB_node, boolean* first_visit, boolean if_set_visited)
@@ -257,7 +265,7 @@ void assemble_contigs_from_a_single_source(dBNode* source, Orientation initial_o
       {
 	if (db_node_get_degree(node->ptr,index,opposite_orientation(node->orientation)) > 1)
 	  {
-	    add_visited_node(node, previous_dB_node);
+	    add_visited_node(node, previous_dB_node, first_visit);
 	  }
 
 	dBNode* next=NULL;
@@ -314,7 +322,7 @@ void assemble_contigs_from_a_single_source(dBNode* source, Orientation initial_o
   }
 
 
-  queue_node* dijkstra_queue = (queue_node*) malloc(60000*sizeof(queue_node));
+  dijkstra_queue = (queue_node*) malloc(60000*sizeof(queue_node));
 
   if (dijkstra_queue == NULL) {die("Could not allocate a dijkstra queue with 60000 elements\n\n");}
 
@@ -434,19 +442,20 @@ void assemble_contigs_from_a_single_source(dBNode* source, Orientation initial_o
 		    {
 		      if (db_node_get_degree(tmp_queue_node.ptr,index,opposite_orientation(tmp_queue_node.orientation)) > 1)
 			{
-			  add_visited_node(&tmp_queue_node, previous_dB_node);
+			  add_visited_node(&tmp_queue_node, previous_dB_node, &first_visit);
 			}
 		      
 		      end_ptr=(end_ptr+1) % 60000;
 		      if (end_ptr == begin_ptr) 
 			{
-			  int len=strlen(tmp_queue_node.contig);
-			  printf("Too many sequences starting from kmer %s\nSkipping the rest and continue with other kmers...\nCurrent length:%d\n\n", tmp_seq, len);
+			  //int len=strlen(tmp_queue_node.contig);
+			  //printf("Too many sequences starting from kmer %s\nSkipping the rest and continue with other kmers...\nCurrent length:%d\n\n", tmp_seq, len);
 			  free(dijkstra_queue);
 			  return;
 			}
 
-		      assign_queue_node(&dijkstra_queue[end_ptr], tmp_queue_node);
+		      if (first_visit)
+			assign_queue_node(&dijkstra_queue[end_ptr], tmp_queue_node);
 		    }
 		  
 		}//if connected
@@ -485,7 +494,7 @@ void assemble_contigs_from_a_single_source(dBNode* source, Orientation initial_o
 		      //print_one_contig(tmp_queue_node.contig, distal_length, output, count);
 
 		      //if (tmp_queue_node.extend > 15 || num_branch_candidate > 2 || strlen(curr_node.contig)-distal_length > 1.25 * insert_size)
-		      if (tmp_queue_node.extend > 5 || num_branch_candidate > 1)
+		      if (tmp_queue_node.extend > 6 || num_branch_candidate > 1)
 			{
 			  run_along_a_supernode(&tmp_queue_node, previous_dB_node, &first_visit, false);
 			  print_one_contig(tmp_queue_node.contig, distal_length, output, count);
@@ -494,7 +503,7 @@ void assemble_contigs_from_a_single_source(dBNode* source, Orientation initial_o
 			{
 			  if (! db_node_check_status(tmp_dB_node, visited))
 			    {
-			      db_node_set_status(tmp_dB_node, visited);
+			      //db_node_set_status(tmp_dB_node, visited);
 			      tmp_queue_node.revisit=0;
 			    }
 			  else tmp_queue_node.revisit++;
@@ -506,20 +515,23 @@ void assemble_contigs_from_a_single_source(dBNode* source, Orientation initial_o
 			    {
 			      if (db_node_get_degree(tmp_queue_node.ptr,index,opposite_orientation(tmp_queue_node.orientation)) > 1)
 				{
-				  add_visited_node(&tmp_queue_node, previous_dB_node);
+				  add_visited_node(&tmp_queue_node, previous_dB_node, &first_visit);
 				}
 			      
 			      end_ptr=(end_ptr+1) % 60000;
 			      if (end_ptr == begin_ptr)
 				{
-				  int len=strlen(tmp_queue_node.contig);
-				  printf("Too many sequences starting from kmer %s\nSkipping the rest and continue with other kmers...\nCurrent length:%d\n\n", tmp_seq, len);
+				  //int len=strlen(tmp_queue_node.contig);
+				  //printf("Too many sequences starting from kmer %s\nSkipping the rest and continue with other kmers...\nCurrent length:%d\n\n", tmp_seq, len);
 				  free(dijkstra_queue);
 				  return;
 				}
 
-			      tmp_queue_node.extend++;
-			      assign_queue_node(&dijkstra_queue[end_ptr], tmp_queue_node);
+			      if (first_visit) 
+				{
+				  tmp_queue_node.extend++;
+				  assign_queue_node(&dijkstra_queue[end_ptr], tmp_queue_node);
+				}
 			    }
 			}//else 
 
