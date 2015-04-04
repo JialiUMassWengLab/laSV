@@ -32,11 +32,11 @@ Perl package BioPerl (http://www.bioperl.org/wiki/Main_Page).
 
 Please make sure these tools/software are properly installed and included in the path.   
 
-Three files need to be ready in the reference genome information directory (argument of -R option): 
-1. FASTA file of the reference genome sequence: GENOME_NAME.fa (GENOME_NAME is the name of the reference genome, e.g., hg19, mm10, dm3, also the argument of option -G); 
-2. 2bit file of the reference genome: GENOME_NAME.2bit
-3. RepeatMasker file of the reference genome: GENOME_NAME_rpmk.bed 
-All these file can be found and downloaded from the UCSC genome browser (https://genome.ucsc.edu/). 
+Three files need to be ready in the reference genome information directory (argument of -R option):  
+1. FASTA file of the reference genome sequence: GENOME_NAME.fa (GENOME_NAME is the name of the reference genome, e.g., hg19, mm10, dm3, also the argument of option -G);  
+2. 2bit file of the reference genome: GENOME_NAME.2bit  
+3. RepeatMasker file of the reference genome: GENOME_NAME_rpmk.bed  
+All these file can be found and downloaded from the UCSC genome browser (https://genome.ucsc.edu/).  
 
 
 For installing laSV first unzip the file. Then in the directory “laSV_v1.x.x/” execute:  
