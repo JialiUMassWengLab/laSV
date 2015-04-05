@@ -205,7 +205,7 @@ perl $DIR/scripts/reformat.pl contigs.fa | fastx_collapser -o $name.contigs.fa
 perl $DIR/scripts/change_contig_name.pl $name.contigs.fa
 echo -e "\e[1;35mContigs printing completed\n\e[0m"
 
-#rm contigs.fa $name.read.span $name.ctx
+rm contigs.fa $name.read.span $name.ctx
 
 
 ##################################
@@ -224,7 +224,7 @@ bwa index -a is $name.breakpoints.fa
 bwa aln -t $CPU -n 3 -l 100 -R 10000 $name.breakpoints.fa $i -f 1.sai
 bwa aln -t $CPU -n 3 -l 100 -R 10000 $name.breakpoints.fa $j -f 2.sai
 bwa sampe -P -n 1 $name.breakpoints.fa 1.sai 2.sai $i $j | samtools view -bSf 0x2 - > $name.breakpoints.bam
-samtools sort -@ 8 -m 3G $name.breakpoints.bam $name.breakpoints.sorted
+samtools sort -@ $CPU -m 3G $name.breakpoints.bam $name.breakpoints.sorted
 rm $name.breakpoints.bam 1.sai 2.sai $name.breakpoints.fa.*
 samtools index $name.breakpoints.sorted.bam
 
@@ -233,7 +233,7 @@ bwa index -a is $name.reference1.fa
 bwa aln -t $CPU -n 3 -l 100 -R 10000 $name.reference1.fa $i -f 1.sai
 bwa aln -t $CPU -n 3 -l 100 -R 10000 $name.reference1.fa $j -f 2.sai
 bwa sampe -P -n 1 $name.reference1.fa 1.sai 2.sai $i $j | samtools view -bSf 0x2 - > $name.reference1.bam
-samtools sort -@ 8 -m 3G $name.reference1.bam $name.reference1.sorted
+samtools sort -@ $CPU -m 3G $name.reference1.bam $name.reference1.sorted
 rm $name.reference1.bam 1.sai 2.sai $name.reference1.fa.*
 samtools index $name.reference1.sorted.bam
 
@@ -242,7 +242,7 @@ bwa index -a is $name.reference2.fa
 bwa aln -t $CPU -n 3 -l 100 -R 10000 $name.reference2.fa $i -f 1.sai
 bwa aln -t $CPU -n 3 -l 100 -R 10000 $name.reference2.fa $j -f 2.sai
 bwa sampe -P -n 1 $name.reference2.fa 1.sai 2.sai $i $j | samtools view -bSf 0x2 - > $name.reference2.bam
-samtools sort -@ 8 -m 3G $name.reference2.bam $name.reference2.sorted
+samtools sort -@ $CPU -m 3G $name.reference2.bam $name.reference2.sorted
 rm $name.reference2.bam 1.sai 2.sai $name.reference2.fa.*
 samtools index $name.reference2.sorted.bam
 
