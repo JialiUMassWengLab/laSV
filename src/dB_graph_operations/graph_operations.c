@@ -620,6 +620,7 @@ int main(int argc, char **argv)
   int number_of_bitfields = ((kmer_size * 2) / (sizeof(bitfield_of_64bits)*8))+1;
   int max_kmer_size = (NUMBER_OF_BITFIELDS_IN_BINARY_KMER * sizeof(bitfield_of_64bits) * 4) -1;
   int min_kmer_size = ((NUMBER_OF_BITFIELDS_IN_BINARY_KMER-1) * sizeof(bitfield_of_64bits) * 4) + 1;
+  long long total_kmers=0;
 
   if (number_of_bitfields != NUMBER_OF_BITFIELDS_IN_BINARY_KMER)
   {
@@ -831,6 +832,7 @@ int main(int argc, char **argv)
 										  db_graph_info, &first_colour_data_starts_going_into);
 	  timestamp();
 	  printf("Loaded the multicolour binary %s, and got %qd kmers\n", cmd_line->multicolour_bin, bp_loaded/db_graph->kmer_size);
+	  total_kmers=bp_loaded/db_graph->kmer_size;
 	  graph_has_had_no_other_binaries_loaded=false;
 	  timestamp();
 
@@ -1199,13 +1201,18 @@ int main(int argc, char **argv)
       Orientation next_orientation;
       Nucleotide reverse_edge;
       boolean circulate=false;
+      long long visited_count=0;
+      int cycle=0;
       do {
 	circulate=false;
+	visited_count=0;
 	
+	printf("%d\t%d\n", cycle, count);
 	for(q=0; q<db_graph->number_buckets * db_graph->bucket_size; q++)
 	  {
 	    if ((db_graph->table[q].coverage[0] > 0)&&(!db_node_check_status(&db_graph->table[q],pruned))&&(db_node_check_status(&db_graph->table[q],visited)))
 	      {
+		visited_count++;
 		short x;
 		for (x=0; x < 2; x++)
 		  {
@@ -1225,7 +1232,11 @@ int main(int argc, char **argv)
 		  }
 	      }
 	  }
-	
+
+	printf("%llu\t%llu\t%.4f\n", visited_count, total_kmers, ((double)visited_count)/total_kmers);
+	if (((double)visited_count)/total_kmers > 0.98) {circulate=false;}
+	cycle++;
+
       } while (circulate);
       
       fclose(output);
