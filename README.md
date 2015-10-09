@@ -36,7 +36,7 @@ Three files need to be ready in the reference genome information directory (argu
 1. FASTA file of the reference genome sequence: GENOME_NAME.fa (GENOME_NAME is the name of the reference genome, e.g., hg19, mm10, dm3, also the argument of option -G);  
 2. 2bit file of the reference genome: GENOME_NAME.2bit  
 3. RepeatMasker file of the reference genome: GENOME_NAME_rpmk.bed  
-4. Chromosome length informtion of the reference genome: GENOME_NAME.chromInfo
+4. Chromosome length informtion of the reference genome: GENOME_NAME.chromInfo  
 All these file can be found and downloaded from the UCSC genome browser (https://genome.ucsc.edu/).  
 
 
