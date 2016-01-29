@@ -88,8 +88,8 @@ while ((my $key, my $value) = each (%coor)) {
 	my @c=split(/\:/, $frags{$sorted_keys[$i+1]});
 
 	if (($b[2] eq "chrU") && ($c[2] eq "chrU")) {next;}
-	if (($b[2] eq $c[2]) && ($b[5] eq "+") && ($c[5] eq "+") && ($b[3] < $c[3]) && (abs($c[3]-$b[4]+$b[1]-$c[0]) <= 150)) {next;}
-	elsif (($b[2] eq $c[2]) && ($b[5] eq "-") && ($c[5] eq "-") && ($c[3] < $b[3]) && (abs($b[3]-$c[4]+$b[1]-$c[0]) <= 150)) {next;}
+	#if (($b[2] eq $c[2]) && ($b[5] eq "+") && ($c[5] eq "+") && ($b[3] < $c[3]) && (abs($c[3]-$b[4]+$b[1]-$c[0]) <= 150)) {next;}
+	#elsif (($b[2] eq $c[2]) && ($b[5] eq "-") && ($c[5] eq "-") && ($c[3] < $b[3]) && (abs($b[3]-$c[4]+$b[1]-$c[0]) <= 150)) {next;}
 
 	$lefts=""; $rights=""; $mid=""; $refb1=""; $refb2=""; $refc1=""; $refc2="";
 	my $bpb=$b[4]; my $bpc=$c[3];
