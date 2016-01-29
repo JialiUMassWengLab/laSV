@@ -58,7 +58,7 @@ while (my $line=<input>) {
     my $align="$a[0]\:$a[1]\:$a[2]\:$a[3]";
     my (@cigar_m)=$cigar{$align}=~/(\d+)M/g;
     my (@cigar_i)=$cigar{$align}=~/(\d+)I/g;
-    if ($a[4]/sum(@cigar_m,@cigar_i) <= 0.15) {
+    if ($a[4]/sum(@cigar_m,@cigar_i) < 0.04) {
 	print output "$line\t$cigar{$align}\n";
     }
 }
@@ -84,7 +84,7 @@ while (my $line=<input>) {
             $a[$i] =~ s/XS:i://;
             $xs=$a[$i];
         }
-        if (($xs > 0) && ($as-$xs <= 30)) {
+        if (($xs > 0) && ($as-$xs <= 20)) {
             $a[3]--;
             my $id="$a[0]\;$a[2]\;$a[3]";
             $filter{$id}=1;
@@ -106,7 +106,8 @@ while (my $line=<input>) {
 close input;
 close output;
 
-system("bedtools intersect -a $ARGV[0].discordant.filt.bed -b $ARGV[1] -wo -f 0.8 > TEoverlap.bed");
-system("awk -F \"\\t\" '{OFS=\"\\t\"; if ((\$3-\$2-\$15 <= 10) && (\$12 <= 10)) print \$1,\$2,\$3,\$4,\$5,\$6,\$7}' TEoverlap.bed > remove.bed");
-system("bedtools subtract -a $ARGV[0].discordant.filt.bed -b remove.bed -f 1 > $ARGV[0].discordant.bed");
-system("rm $ARGV[0].discordant.filt.bed TEoverlap.bed remove.bed");
+#system("bedtools intersect -a $ARGV[0].discordant.filt.bed -b $ARGV[1] -wo -f 0.8 > TEoverlap.bed");
+#system("awk -F \"\\t\" '{OFS=\"\\t\"; if ((\$3-\$2-\$15 <= 10) && (\$12 <= 10)) print \$1,\$2,\$3,\$4,\$5,\$6,\$7}' TEoverlap.bed > remove.bed");
+#system("bedtools subtract -a $ARGV[0].discordant.filt.bed -b remove.bed -f 1 > $ARGV[0].discordant.bed");
+system("mv $ARGV[0].discordant.filt.bed $ARGV[0].discordant.bed");
+#system("rm $ARGV[0].discordant.filt.bed TEoverlap.bed remove.bed");

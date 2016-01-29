@@ -70,7 +70,7 @@ while (my $line=<input>) {
 	close input1;
 	system("rm tmp");
 	
-	if (($end1 < $start2) || ($end2 < $start1)) {$type{$bp}="I";}
+	if (($end1 < $start2 || $end2 < $start1) && ($a[1] eq $a[3]) && (abs($a[2]-$a[4]) < 100)) {$type{$bp}="I";}
 	else {$type{$bp}="O";}
     }
 }

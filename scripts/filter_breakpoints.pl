@@ -2,6 +2,7 @@
 
 use strict;
 
+my %closeup=();
 my %remove=();
 open (input, "<$ARGV[0].breakpoints.fa") or die "Can't open $ARGV[0].breakpoints.fa since $!\n";
 open (output, ">>tmp.bed") or die "Can't open tmp.bed since $!\n";
@@ -18,6 +19,9 @@ while (my $line=<input>) {
 	    $remove{$line}=1;
 	    next;
 	}
+
+	if (($a[1] eq $a[3]) && (abs($a[2]-$a[4]) < 500000)) {$closeup{$line}=1;}
+
 	print output "$a[1]\t$lower1\t$a[2]\t$line\|BP1\n";
 	print output "$a[3]\t$lower2\t$a[4]\t$line\|BP2\n";
     }
@@ -47,8 +51,10 @@ while (my $line=<input>) {
 close input;
 
 while ((my $key, my $value) = each (%family1)) {
-    if (($value eq $family2{$key}) && ($pos1{$key} ne $pos2{$key}) && ($flag{$key} == 1)) {
+    if (($value eq $family2{$key}) && ($pos1{$key} ne $pos2{$key}) && ($flag{$key} == 1) && (! defined $closeup{$key})) {
 	$key =~ s/\:Sample//;
+	my @x=split(/\:/, $pos1{$key});
+	my @y=split(/\:/, $pos2{$key});
 	$remove{$key}=1;
     }
 }

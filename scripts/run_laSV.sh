@@ -212,7 +212,7 @@ rm contigs.fa $name.read.span $name.ctx
 ## Estimate SV allele frequency ##
 ##################################
 echo -e "\e[1;35mAligning contigs to the reference genome...\n\e[0m"
-bwa mem -t $CPU -T 30 -v 2 $REF/$GENOME.fa $name.contigs.fa > $name.aligned.sam
+bwa mem -t $CPU -T 30 -B 3 -O 5 -L 0 -v 2 $REF/$GENOME.fa $name.contigs.fa > $name.aligned.sam
 echo -e "\e[1;35mAlignment completed. Detecting putative SVs...\n\e[0m"
 perl $DIR/scripts/process.alignment.sam.pl $name.aligned $REF/$GENOME\_rpmk.bed
 perl $DIR/scripts/get_flanking_seqs.pl $name $REF/$GENOME.chromInfo $REF/$GENOME.2bit
