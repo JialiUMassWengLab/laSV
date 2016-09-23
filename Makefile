@@ -114,7 +114,7 @@ else
 	OPT := -O3 $(OPT)
 endif
 
-LIBLIST = -lseqfile -lbam -lstrbuf -lz -lm
+LIBLIST = -lseqfile -lhts -lbam -lstrbuf -lz -lm
 TEST_LIBLIST = -lcunit -lncurses $(LIBLIST)
 
 # Add -L/usr/local/lib/ to satisfy some systems that struggle to link libz
