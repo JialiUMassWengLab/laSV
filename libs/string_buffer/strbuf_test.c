@@ -39,6 +39,7 @@ void _test_trim(const char* str)
   char* new_str = string_trim(str_cpy);
 
   printf("trim('%s'): '%s'\n", str, new_str);
+  free(str_cpy);
 }
 
 void test_trim()
@@ -69,6 +70,7 @@ void _test_split(char* split, char* txt)
   if(count > 0)
   {
     printf("'%s'", results[0]);
+    free(results[0]);
   
     int i;
     for(i = 1; i < count; i++)
@@ -76,6 +78,7 @@ void _test_split(char* split, char* txt)
       printf(", '%s'", results[i]);
       free(results[i]);
     }
+
     free(results);
   }
 
@@ -101,6 +104,7 @@ void test_add_char()
   strbuf_append_char(sbuf, 'a');
   strbuf_append_char(sbuf, 'b');
   printf("'%s' (length: %lu)\n", sbuf->buff, sbuf->len);
+  strbuf_free(sbuf);
 }
 
 void test_sprintf()
@@ -126,6 +130,21 @@ void test_sprintf()
 
   strbuf_sprintf(sbuf, a, b);
   printf("'%s' (length: %lu)\n", sbuf->buff, sbuf->len);
+  strbuf_free(sbuf);
+}
+
+void test_sscanf()
+{
+  StrBuf *sbuf = strbuf_new();
+  char *input = "I'm sorry Dave I can't do that";
+  
+  strbuf_ensure_capacity(sbuf, strlen(input));
+  sscanf(input, "I'm sorry %s I can't do that", sbuf->buff);
+  strbuf_update_len(sbuf);
+
+  printf("Name: '%s'\n", sbuf->buff);
+
+  strbuf_free(sbuf);
 }
 
 int main(int argc, char* argv[])
@@ -140,6 +159,8 @@ int main(int argc, char* argv[])
     printf("\n");
     exit(EXIT_FAILURE);
   }
+
+  test_sscanf();
 
   // StringBuffer functions
   test_add_char();

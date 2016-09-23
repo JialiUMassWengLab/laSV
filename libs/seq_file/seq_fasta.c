@@ -26,7 +26,7 @@ char seq_next_read_fasta(SeqFile *sf)
   if(sf->read_line_start)
   {
     // Read name
-    strbuf_gzreadline(sf->entry_name, sf->gz_file);
+    seq_readline(sf->entry_name, sf);
     strbuf_chomp(sf->entry_name);
 
     sf->line_number++;
@@ -42,7 +42,7 @@ char seq_next_read_fasta(SeqFile *sf)
     do
     {
       // Read until the end of the line
-      while((c = gzgetc(sf->gz_file)) != -1 && c != '\n' && c != '\r')
+      while((c = seq_getc(sf)) != -1 && c != '\n' && c != '\r')
       {
         sf->total_bases_skipped++;
       }
@@ -53,7 +53,7 @@ char seq_next_read_fasta(SeqFile *sf)
         sf->line_number++; // Must have read a new line
 
       // Read through end of line chars
-      while((c = gzgetc(sf->gz_file)) != -1 && (c == '\n' || c == '\r'))
+      while((c = seq_getc(sf)) != -1 && (c == '\n' || c == '\r'))
       {
         sf->line_number++;
       }
@@ -70,7 +70,7 @@ char seq_next_read_fasta(SeqFile *sf)
     while(c != '>');
 
     // Read name
-    strbuf_gzreadline(sf->entry_name, sf->gz_file);
+    seq_readline(sf->entry_name, sf);
     strbuf_chomp(sf->entry_name);
     sf->line_number++;
 
@@ -82,7 +82,7 @@ char seq_read_base_fasta(SeqFile *sf, char *c)
 {
   int next;
   
-  while((next = gzgetc(sf->gz_file)) != -1 && (next == '\n' || next == '\r'))
+  while((next = seq_getc(sf)) != -1 && (next == '\n' || next == '\r'))
     sf->line_number++;
 
   if(next == -1)
@@ -105,12 +105,12 @@ char seq_read_all_bases_fasta(SeqFile *sf, StrBuf *sbuf)
 {
   int c;
 
-  while((c = gzgetc(sf->gz_file)) != -1 && c != '>')
+  while((c = seq_getc(sf)) != -1 && c != '>')
   {
     if(c != '\r' && c != '\n')
     {
       strbuf_append_char(sbuf, (char)c);
-      strbuf_gzreadline(sbuf, sf->gz_file);
+      seq_readline(sbuf, sf);
       strbuf_chomp(sbuf);
     }
 
@@ -146,8 +146,8 @@ size_t seq_file_write_seq_fasta(SeqFile *sf, const char *seq, size_t str_len)
 {
   if(sf->write_state == WS_BEGIN)
   {
-    fprintf(stderr, "seq_file.c: writing in the wrong order (seq) [path: %s]\n",
-            sf->path);
+    fprintf(stderr, "%s:%i: writing in the wrong order (seq) [path: %s]\n",
+            __FILE__, __LINE__, sf->path);
     exit(EXIT_FAILURE);
   }
 
@@ -160,6 +160,19 @@ size_t seq_file_write_seq_fasta(SeqFile *sf, const char *seq, size_t str_len)
   }
 
   num_bytes_printed += _write(sf, seq, str_len);
+
+  return num_bytes_printed;
+}
+
+size_t seq_file_close_write_fasta(SeqFile *sf)
+{
+  size_t num_bytes_printed = 0;
+
+  if(sf->write_state == WS_NAME || sf->write_state == WS_SEQ)
+  {
+    num_bytes_printed += seq_puts(sf, "\n");
+    sf->line_number++;
+  }
 
   return num_bytes_printed;
 }

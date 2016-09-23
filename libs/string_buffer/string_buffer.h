@@ -67,8 +67,12 @@ void strbuf_reset(StrBuf* sbuf);
 
 // Get number of characters in buffer
 t_buf_pos strbuf_len(const StrBuf* sbuf);
+
 // Get current capacity
 t_buf_pos strbuf_size(const StrBuf* sbuf);
+
+// If you alter the buffer, call strbuf_update_len to correct the struct
+void strbuf_update_len(StrBuf * sbuf);
 
 //
 // Resizing
@@ -96,6 +100,9 @@ void strbuf_shrink(StrBuf *sbuf, t_buf_pos new_len);
 char strbuf_get_char(const StrBuf *sbuf, t_buf_pos index);
 void strbuf_set_char(StrBuf *sbuf, t_buf_pos index, char c);
 
+// Set string buffer to contain a given string
+void strbuf_set(StrBuf *sbuf, const char *str);
+
 // Add a character to the end of this StrBuf
 void strbuf_append_char(StrBuf* sbuf, char c);
 // Copy a StrBuf to the end of this StrBuf
@@ -106,7 +113,8 @@ void strbuf_append_str(StrBuf* sbuf, const char* txt);
 void strbuf_append_strn(StrBuf* sbuf, const char* txt, t_buf_pos len);
 
 // Remove \r and \n characters from the end of this StrBuf
-void strbuf_chomp(StrBuf *sbuf);
+// Returns the number of characters removed
+t_buf_pos strbuf_chomp(StrBuf *sbuf);
 
 // Reverse a string
 void strbuf_reverse(StrBuf *sbuf);
@@ -117,6 +125,10 @@ void strbuf_reverse_region(StrBuf *sbuf, t_buf_pos start, t_buf_pos length);
 // Get a substring as a new null terminated char array
 // (remember to free the returned char* after you're done with it!)
 char* strbuf_substr(StrBuf *sbuf, t_buf_pos start, t_buf_pos len);
+
+//added by Zam - as above, but passing in a preallocated string.
+//caller's job to ensure the atring you pass in is long enough
+void strbuf_substr_prealloced(StrBuf *sbuf, t_buf_pos start, t_buf_pos len, char* outstr);
 
 // Change to upper or lower case
 void strbuf_to_uppercase(StrBuf *sbuf);
@@ -155,12 +167,10 @@ int strbuf_puts(StrBuf* sbuf);
 
 // Print to FILE stream. Returns number of bytes printed
 int strbuf_fputs(StrBuf* sbuf, FILE* out);
+int strbuf_gzputs(StrBuf* sbuf, gzFile gzout);
 
 size_t strbuf_fwrite(StrBuf* sbuf, t_buf_pos pos, t_buf_pos len, FILE* out);
-
-int strbuf_gzputs(StrBuf* sbuf, gzFile* gzout);
-
-int strbuf_gzwrite(StrBuf* sbuf, t_buf_pos pos, t_buf_pos len, gzFile* gzout);
+int strbuf_gzwrite(StrBuf* sbuf, t_buf_pos pos, t_buf_pos len, gzFile gzout);
 
 //
 // sprintf
@@ -188,19 +198,34 @@ int strbuf_sprintf_noterm(StrBuf *sbuf, t_buf_pos pos, const char* fmt, ...)
 
 // Reading a FILE
 t_buf_pos strbuf_reset_readline(StrBuf *sbuf, FILE *file);
-t_buf_pos strbuf_readline(StrBuf *sbuf, FILE *gz_file);
+t_buf_pos strbuf_readline(StrBuf *sbuf, FILE *file);
 
 // Reading a gzFile
-t_buf_pos strbuf_reset_gzreadline(StrBuf *sbuf, gzFile *gz_file);
-t_buf_pos strbuf_gzreadline(StrBuf *sbuf, gzFile *gz_file);
+t_buf_pos strbuf_reset_gzreadline(StrBuf *sbuf, gzFile gz_file);
+t_buf_pos strbuf_gzreadline(StrBuf *sbuf, gzFile gz_file);
 
 // Skip a line and return how many characters were skipped
 t_buf_pos strbuf_skip_line(FILE *file);
-t_buf_pos strbuf_gzskip_line(gzFile *gz_file);
+t_buf_pos strbuf_gzskip_line(gzFile gz_file);
 
 // Read a line but no more than len bytes
 t_buf_pos strbuf_read(StrBuf *sbuf, FILE *file, t_buf_pos len);
-t_buf_pos strbuf_gzread(StrBuf *sbuf, gzFile *file, t_buf_pos len);
+t_buf_pos strbuf_gzread(StrBuf *sbuf, gzFile gz_file, t_buf_pos len);
+
+//
+// String functions
+//
+
+// Trim whitespace characters from the start and end of a string
+void strbuf_trim(StrBuf *sbuf);
+
+// Trim the characters listed in `list` from the left of `sbuf`
+// `list` is a null-terminated string of characters
+void strbuf_ltrim(StrBuf *sbuf, char* list);
+
+// Trim the characters listed in `list` from the right of `sbuf`
+// `list` is a null-terminated string of characters
+void strbuf_rtrim(StrBuf *sbuf, char* list);
 
 /**************************/
 /* Other String functions */

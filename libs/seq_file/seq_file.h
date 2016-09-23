@@ -37,8 +37,8 @@ enum SeqFileType
 SeqFile* seq_file_open(const char* path);
 
 // Open a file assuming a given filetype
-SeqFile* seq_file_open_filetype(const char* file_path,
-                                SeqFileType file_type);
+//SeqFile* seq_file_open_filetype(const char* file_path,
+//                                SeqFileType file_type);
 
 // If open for writing: writes newline to file and returns 1 on success
 // otherwise return 0
@@ -57,11 +57,9 @@ const char* seq_file_type_str(SeqFileType file_type, char zipped);
 // Get path
 const char* seq_get_path(const SeqFile *sf);
 
-// Set/get FASTQ ASCII offset
-// Quality scores are returned in ASCII, this value is required when reading
-// from a SAM/BAM file, as they store quality scores without an offset
-void seq_set_fastq_ascii_offset(SeqFile *sf, char fastq_ascii_offset);
-char seq_get_fastq_ascii_offset(const SeqFile *sf);
+// Get min and max quality values in the first `num` quality scores
+// Returns -1 on error, 0 if no quality scores or no reads, 1 on success
+int seq_estimate_qual_limits(const char *path, int num, int *min, int *max);
 
 // Get the number of bases read/written so far
 unsigned long seq_total_bases_passed(const SeqFile *sf);
@@ -82,7 +80,8 @@ char seq_next_read(SeqFile *sf);
 // Get the name of the next read
 const char* seq_get_read_name(SeqFile *sf);
 
-// Get this read index -- starts from 0
+// Get this read index -- 0 if no reads read yet,
+// otherwise read number of prev read entry
 unsigned long seq_get_read_index(SeqFile *sf);
 
 // Get the distance into this read that we have read
@@ -110,6 +109,7 @@ char seq_read_k_quals(SeqFile *sf, char* str, int k);
 // returns 1 on success, 0 otherwise
 char seq_read_all_bases(SeqFile *sf, StrBuf *sbuf);
 char seq_read_all_quals(SeqFile *sf, StrBuf *sbuf);
+char seq_read_all_bases_and_quals(SeqFile *sf, StrBuf *sbuf_seq, StrBuf *sbuf_qual);
 
 // Write to a file.  Any of name, seq, quals may be NULL
 // Returns the number of bytes written or 0 on failure

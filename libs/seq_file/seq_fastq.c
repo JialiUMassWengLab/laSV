@@ -27,12 +27,12 @@ void _seq_read_fastq_sequence(SeqFile *sf)
 
   int c;
 
-  while((c = gzgetc(sf->gz_file)) != -1 && c != '+')
+  while((c = seq_getc(sf)) != -1 && c != '+')
   {
     if(c != '\r' && c != '\n')
     {
       strbuf_append_char(sf->bases_buff, (char)c);
-      strbuf_gzreadline(sf->bases_buff, sf->gz_file);
+      seq_readline(sf->bases_buff, sf);
       strbuf_chomp(sf->bases_buff);
     }
 
@@ -41,13 +41,15 @@ void _seq_read_fastq_sequence(SeqFile *sf)
 
   if(c == -1)
   {
-    fprintf(stderr, "seq_file.c: missing + in FASTQ [file: %s]\n", sf->path);
+    fprintf(stderr, "%s:%i: Missing '+' in FASTQ [file: %s; line: %lu]\n",
+            __FILE__, __LINE__, sf->path, sf->line_number);
   }
 
   // Read to end of separator line
   if(c != '\r' && c != '\n')
   {
-    strbuf_gzskip_line(sf->gz_file);
+    seq_skip_line(sf);
+    sf->line_number++;
   }
 }
 
@@ -56,7 +58,7 @@ char seq_next_read_fastq(SeqFile *sf)
   if(sf->read_line_start)
   {
     // Read name
-    strbuf_gzreadline(sf->entry_name, sf->gz_file);
+    seq_readline(sf->entry_name, sf);
     strbuf_chomp(sf->entry_name);
     sf->line_number++;
 
@@ -76,7 +78,7 @@ char seq_next_read_fastq(SeqFile *sf)
     // Skip over remaining quality values
     while(sf->entry_offset_qual < strbuf_len(sf->bases_buff))
     {
-      if((c = gzgetc(sf->gz_file)) == -1)
+      if((c = seq_getc(sf)) == -1)
         return 0;
 
       if(c != '\r' && c != '\n')
@@ -86,7 +88,7 @@ char seq_next_read_fastq(SeqFile *sf)
     }
 
     // Skip newlines
-    while((c = gzgetc(sf->gz_file)) != -1 && (c == '\n' || c == '\r'))
+    while((c = seq_getc(sf)) != -1 && (c == '\n' || c == '\r'))
       sf->line_number++;
 
     if(c == -1)
@@ -94,13 +96,14 @@ char seq_next_read_fastq(SeqFile *sf)
 
     if(c != '@')
     {
-      fprintf(stderr, "seq_file.c: FASTQ header does not begin with '@' [%c]\n",
-              c);
+      fprintf(stderr, "%s:%i: FASTQ header does not begin with '@' (%c) "
+                      "[file: %s; line: %lu]\n",
+              __FILE__, __LINE__, c, sf->path, sf->line_number);
       return 0;
     }
 
     // Read name
-    strbuf_gzreadline(sf->entry_name, sf->gz_file);
+    seq_readline(sf->entry_name, sf);
     strbuf_chomp(sf->entry_name);
     sf->line_number++;
 
@@ -131,13 +134,14 @@ char seq_read_qual_fastq(SeqFile *sf, char *c)
 
   int next;
 
-  while((next = gzgetc(sf->gz_file)) != -1 && (next == '\n' || next == '\r'))
+  while((next = seq_getc(sf)) != -1 && (next == '\n' || next == '\r'))
     sf->line_number++;
 
   if(next == -1)
   {
-    fprintf(stderr, "seq_file.c: fastq file ended without finishing quality "
-                    "scores [file: %s]\n", sf->path);
+    fprintf(stderr, "%s:%i: FASTQ file ended without finishing quality scores "
+                    "[file: %s; line: %lu]\n",
+            __FILE__, __LINE__, sf->path, sf->line_number);
     return 0;
   }
 
@@ -166,7 +170,7 @@ char seq_read_all_quals_fastq(SeqFile *sf, StrBuf *sbuf)
   int next = -1;
   t_buf_pos i;
 
-  for(i = 0; i < expected_len && (next = gzgetc(sf->gz_file)) != -1; i++)
+  for(i = 0; i < expected_len && (next = seq_getc(sf)) != -1; i++)
   {
     if(next != '\r' && next != '\n')
     {
@@ -178,8 +182,9 @@ char seq_read_all_quals_fastq(SeqFile *sf, StrBuf *sbuf)
 
   if(next == -1)
   {
-    fprintf(stderr, "seq_file.c: fastq file ended without finishing quality "
-                    "scores (FASTQ) [file: %s]\n", sf->path);
+    fprintf(stderr, "%s:%i: FASTQ file ended without finishing quality "
+                    "scores (FASTQ) [file: %s; line: %lu]\n",
+            __FILE__, __LINE__, sf->path, sf->line_number);
   }
 
   return 1;
@@ -204,8 +209,9 @@ unsigned long seq_file_write_name_fastq(SeqFile *sf, const char *name)
   }
   else if(sf->write_state == WS_SEQ)
   {
-    fprintf(stderr, "seq_file.c: writing in the wrong order (name) [path: %s]\n",
-            sf->path);
+    fprintf(stderr, "%s:%i: writing in the wrong order (name) "
+                    "[path: %s; line: %lu]\n",
+            __FILE__, __LINE__, sf->path, sf->line_number);
     exit(EXIT_FAILURE);
   }
 
@@ -218,8 +224,8 @@ size_t seq_file_write_seq_fastq(SeqFile *sf, const char *seq, size_t str_len)
 {
   if(sf->write_state == WS_BEGIN || sf->write_state == WS_QUAL)
   {
-    fprintf(stderr, "seq_file.c: writing in the wrong order (seq) [path: %s]\n",
-            sf->path);
+    fprintf(stderr, "%s:%i: writing in the wrong order (seq) [path: %s; line: %lu]\n",
+            __FILE__, __LINE__, sf->path, sf->line_number);
     exit(EXIT_FAILURE);
   }
 
@@ -240,8 +246,8 @@ size_t seq_file_write_qual_fastq(SeqFile *sf, const char *qual)
 {
   if(sf->write_state == WS_BEGIN || sf->write_state == WS_NAME)
   {
-    fprintf(stderr, "seq_file.c: writing in the wrong order (qual) [path: %s]\n",
-            sf->path);
+    fprintf(stderr, "%s:%i: Writing in the wrong order (qual) [path: %s; line: %lu]\n",
+            __FILE__, __LINE__, sf->path, sf->line_number);
     exit(EXIT_FAILURE);
   }
 
@@ -260,6 +266,29 @@ size_t seq_file_write_qual_fastq(SeqFile *sf, const char *qual)
 
   num_bytes_printed += _write(sf, qual, str_len);
   sf->write_state = WS_QUAL;
+
+  return num_bytes_printed;
+}
+
+size_t seq_file_close_write_fastq(SeqFile *sf)
+{
+  size_t num_bytes_printed = 0;
+
+  if(sf->write_state == WS_NAME)
+  {
+    num_bytes_printed += seq_puts(sf, "\n\n+\n\n");
+    sf->line_number += 4;
+  }
+  else if(sf->write_state == WS_SEQ)
+  {
+    num_bytes_printed += seq_puts(sf, "\n+\n\n");
+    sf->line_number += 3;
+  }
+  else if(sf->write_state == WS_QUAL)
+  {
+    num_bytes_printed += seq_puts(sf, "\n");
+    sf->line_number += 1;
+  }
 
   return num_bytes_printed;
 }

@@ -1,13 +1,16 @@
 seq_file
 ========
+C Library for reading multiple bioinformatics sequence file formats  
+https://github.com/noporpoise/seq_file  
+Isaac Turner turner.isaac@gmail.com  
+4 July 2012, GPLv3  
 
-C Library for reading multiple bioinformatics sequence file formats
-
-https://github.com/noporpoise/seq_file
-
-Isaac Turner turner.isaac@gmail.com
-
-4 July 2012, GPLv3
+    *NOTE*: new_api/ will soon replace the code and current API. This implements
+    buffered and unbuffered reading which provides a significant speed increase
+    for reading gzip files on older systems. It also drops the dependency
+    for string_buffer and is implemented entirely in two header files.  It does
+    not provide all the same features, please get in touch if there's anything
+    you'd like to see added to new_api. -Isaac
 
 About
 =====
@@ -35,27 +38,57 @@ It can also 'wrap lines' in the output:
 
     $ seq_convert in.fq.gz out.fa 80
 
+
+Example Code
+============
+
+Example code to read a file and print as a FASTA file using seq_file.
+For more example code see examples/example.c
+
+    SeqFile *sf = seq_file_open(path);
+
+    if(sf == NULL)
+    {
+      // Error opening file
+      fprintf(stderr, "Error: cannot read seq file '%s'\n", path);
+      exit(EXIT_FAILURE);
+    }
+
+    char c, q;
+
+    while(seq_next_read(sf))
+    {
+      printf(">%s\n", seq_get_read_name(sf));
+
+      while(seq_read_base(sf, &c))
+        putc(c, stdout);
+
+      putc('\n', stdout);
+    }
+
+    seq_file_close(sf);
+
 Build
 =====
 
 Seq_file requires:
 
-* sam_tools [http://samtools.sourceforge.net/]
+* htslib [https://github.com/samtools/htslib]
 * string_buffer [https://github.com/noporpoise/string_buffer]
 
 It also requires zlib, which should already be installed.  
 
 To build the test code and the program seq_convert:
 
-    make STRING_BUF_PATH=path/to/string_buffer/ SAMTOOLS_PATH=path/to/samtools/
+    make STRING_BUF_PATH=path/to/string_buffer/ HTS_PATH=path/to/htslib/
 
 Sometimes the linker can't find your libz.a file (zlib), so you may need to try:
 
-    make STRING_BUF_PATH=path/to/string_buffer/ SAMTOOLS_PATH=path/to/samtools/ ZLIB_PATH=/dir/with/libz/in/
+    make STRING_BUF_PATH=path/to/string_buffer/ HTS_PATH=path/to/htslib/ ZLIB_PATH=/dir/with/libz/in/
 
 To call from your own programs, use the following in your Makefile etc.
 
-    LIBS=-lseqfile -lbam -lstrbuf -lz
+    LIBS=-lseqfile -lhts -lstrbuf -lz
     INCS=-I$(PATH_TO_SAMTOOLS) -I$(PATH_TO_STRING_BUFFER) -I$(PATH_TO_SEQ_FILE) \
          -L$(PATH_TO_SAMTOOLS) -L$(PATH_TO_STRING_BUFFER) -L$(PATH_TO_SEQ_FILE)
     gcc $(INCS) <your files / args etc.> $(LIBS)
@@ -104,8 +137,8 @@ Get the distance into this read's quality scores that we have read
 
     unsigned long seq_get_qual_offset(SeqFile *sf);
 
-If seq_next_read() returned 1 and seq_read_base() is now returning 0 (i.e we
-have read all the bases), seq_get_length() will now report the correct read
+If `seq_next_read()` returned 1 and `seq_read_base()` is now returning 0 (i.e we
+have read all the bases), `seq_get_length()` will now report the correct read
 length
 
     unsigned long seq_get_length(SeqFile *sf);
@@ -175,6 +208,12 @@ scores, 0 otherwise.  Note: quality scores may still all be set to 'null' e.g.
 
     char seq_has_quality_scores(const SeqFile *sf);
 
+
+Get min and max quality values in the first 500 quality scores of a file.
+Returns -1 on error, 0 if no quality scores or no reads, 1 on success.
+
+    char seq_estimate_qual_limits(const char *path, char *min, char *max);
+
 Development
 ===========
 
@@ -224,15 +263,15 @@ Proposed new API to deal with mate pairs:
 License
 =======
 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
  
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
  
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.

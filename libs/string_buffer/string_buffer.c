@@ -26,7 +26,7 @@
 
 #define MIN(x,y) ((x) < (y) ? (x) : (y))
 #define MAX(x,y) ((x) > (y) ? (x) : (y))
-#define MIN_SIZE 10
+#define MIN_SIZE 16
 
 #include <stdlib.h>
 #include <string.h>
@@ -129,15 +129,20 @@ char* strbuf_as_str(const StrBuf* sbuf)
 }
 
 // Get string length
-t_buf_pos strbuf_len(const StrBuf* sbuf)
+t_buf_pos strbuf_len(const StrBuf *sbuf)
 {
   return sbuf->len;
 }
 
 // Get buffer length
-t_buf_pos strbuf_size(const StrBuf* sbuf)
+t_buf_pos strbuf_size(const StrBuf *sbuf)
 {
   return sbuf->size;
+}
+
+void strbuf_update_len(StrBuf *sbuf)
+{
+  sbuf->len = strlen(sbuf->buff);
 }
 
 // Get / set characters
@@ -179,6 +184,20 @@ void strbuf_set_char(StrBuf *sbuf, t_buf_pos index, char c)
   {
     sbuf->buff[index] = c;
   }
+}
+
+// Set string buffer to contain a given string
+// The string can be a string within the given string buffer
+void strbuf_set(StrBuf *sbuf, const char *str)
+{
+  size_t len = strlen(str);
+  strbuf_ensure_capacity(sbuf, len+1);
+
+  // Use memmove to allow overlapping strings
+  memmove(sbuf->buff, str, sizeof(char) * len);
+
+  sbuf->buff[len] = '\0';
+  sbuf->len = len;
 }
 
 /******************************/
@@ -287,8 +306,13 @@ void strbuf_append_buff(StrBuf* dst, StrBuf* src)
   dst->buff[dst->len] = '\0';
 }
 
-void strbuf_chomp(StrBuf *sbuf)
+
+// Remove \r and \n characters from the end of this StrBuf
+// Returns the number of characters removed
+t_buf_pos strbuf_chomp(StrBuf *sbuf)
 {
+  t_buf_pos original_length = sbuf->len;
+
   while(sbuf->len >= 1)
   {
     char last_char = sbuf->buff[sbuf->len-1];
@@ -302,6 +326,8 @@ void strbuf_chomp(StrBuf *sbuf)
       break;
     }
   }
+
+  return (original_length - sbuf->len);
 }
 
 // Reverse a string
@@ -346,7 +372,8 @@ void strbuf_reverse_region(StrBuf *sbuf, t_buf_pos start, t_buf_pos length)
 char* strbuf_substr(StrBuf *sbuf, t_buf_pos start, t_buf_pos len)
 {
   // Bounds checking
-  if(start + len >= sbuf->len)
+  //commented out by Zam  if(start + len >= sbuf->len)
+  if(start + len > sbuf->len)
   {
     fprintf(stderr, "StrBuf OutOfBounds Error: "
                     "strbuf_substr(start: %lui, len: %lui) [strlen: %lu]\n",
@@ -360,6 +387,12 @@ char* strbuf_substr(StrBuf *sbuf, t_buf_pos start, t_buf_pos len)
   new_string[len] = '\0';
 
   return new_string;
+}
+
+void strbuf_substr_prealloced(StrBuf *sbuf, t_buf_pos start, t_buf_pos len, char* outstr)
+{
+  strncpy(outstr, sbuf->buff + start, len);
+  outstr[len] = '\0';
 }
 
 void strbuf_to_uppercase(StrBuf *sbuf)
@@ -517,12 +550,12 @@ size_t strbuf_fwrite(StrBuf* sbuf, t_buf_pos pos, t_buf_pos len, FILE* out)
 }
 
 // gz versions
-int strbuf_gzputs(StrBuf* sbuf, gzFile* gzout)
+int strbuf_gzputs(StrBuf* sbuf, gzFile gzout)
 {
   return gzputs(gzout, sbuf->buff);
 }
 
-int strbuf_gzwrite(StrBuf* sbuf, t_buf_pos pos, t_buf_pos len, gzFile* gzout)
+int strbuf_gzwrite(StrBuf* sbuf, t_buf_pos pos, t_buf_pos len, gzFile gzout)
 {
   return gzwrite(gzout, sbuf->buff + pos, (unsigned)len);
 }
@@ -668,7 +701,7 @@ int strbuf_sprintf_noterm(StrBuf *sbuf, t_buf_pos pos, const char* fmt, ...)
 /*****************/
 
 #define _func_read(name,type,func) \
-t_buf_pos name(StrBuf *sbuf, type *file, t_buf_pos len)                        \
+t_buf_pos name(StrBuf *sbuf, type file, t_buf_pos len)                         \
 {                                                                              \
   if(len == 0)                                                                 \
   {                                                                            \
@@ -690,11 +723,11 @@ t_buf_pos name(StrBuf *sbuf, type *file, t_buf_pos len)                        \
 _func_read(strbuf_gzread, gzFile,
            gzgets(file, (char*)(sbuf->buff + sbuf->len), (unsigned)(len+1)) == Z_NULL)
 
-_func_read(strbuf_read, FILE,
+_func_read(strbuf_read, FILE*,
            fgets((char*)(sbuf->buff + sbuf->len), (unsigned)(len+1), file) == NULL)
 
 #define _func_readline(name,type,func) \
-t_buf_pos name(StrBuf *sbuf, type *file)                                       \
+t_buf_pos name(StrBuf *sbuf, type file)                                        \
 {                                                                              \
   t_buf_pos init_str_len = sbuf->len;                                          \
   strbuf_ensure_capacity(sbuf, sbuf->len+1);                                   \
@@ -725,7 +758,7 @@ _func_readline(strbuf_gzreadline, gzFile,
 // read FILE
 // returns number of characters read
 // or 0 if EOF
-_func_readline(strbuf_readline, FILE,
+_func_readline(strbuf_readline, FILE*,
                fgets((char*)(sbuf->buff + sbuf->len),
                      (int)(sbuf->size - sbuf->len), file) != NULL)
 
@@ -742,7 +775,7 @@ t_buf_pos strbuf_reset_readline(StrBuf *sbuf, FILE *file)
 // read gzFile
 // returns number of characters read
 // or 0 if EOF
-t_buf_pos strbuf_reset_gzreadline(StrBuf *sbuf, gzFile *gz_file)
+t_buf_pos strbuf_reset_gzreadline(StrBuf *sbuf, gzFile gz_file)
 {
   strbuf_reset(sbuf);
   return strbuf_gzreadline(sbuf, gz_file);
@@ -769,7 +802,7 @@ t_buf_pos strbuf_skip_line(FILE *file)
   return count;
 }
 
-t_buf_pos strbuf_gzskip_line(gzFile *gz_file)
+t_buf_pos strbuf_gzskip_line(gzFile gz_file)
 {
   char c;
   t_buf_pos count = 0;
@@ -785,6 +818,68 @@ t_buf_pos strbuf_gzskip_line(gzFile *gz_file)
   }
 
   return count;
+}
+
+//
+// String functions
+//
+
+// Trim whitespace characters from the start and end of a string
+void strbuf_trim(StrBuf *sbuf)
+{
+  if(sbuf->len == 0)
+    return;
+
+  // Trim end first
+  while(sbuf->len > 0 && isspace(sbuf->buff[sbuf->len-1]))
+    sbuf->len--;
+
+  sbuf->buff[sbuf->len] = '\0';
+
+  if(sbuf->len == 0)
+    return;
+
+  t_buf_pos start = 0;
+
+  while(start < sbuf->len && isspace(sbuf->buff[start]))
+    start++;
+
+  if(start != 0)
+  {
+    sbuf->len -= start;
+    memmove(sbuf->buff, sbuf->buff+start, sbuf->len);
+    sbuf->buff[sbuf->len] = '\0';
+  }
+}
+
+// Trim the characters listed in `list` from the left of `sbuf`
+// `list` is a null-terminated string of characters
+void strbuf_ltrim(StrBuf *sbuf, char* list)
+{
+  t_buf_pos start = 0;
+
+  while(start < sbuf->len && strchr(list, sbuf->buff[start]) != NULL)
+    start++;
+
+  if(start != 0)
+  {
+    sbuf->len -= start;
+    memmove(sbuf->buff, sbuf->buff+start, sbuf->len);
+    sbuf->buff[sbuf->len] = '\0';
+  }
+}
+
+// Trim the characters listed in `list` from the right of `sbuf`
+// `list` is a null-terminated string of characters
+void strbuf_rtrim(StrBuf *sbuf, char* list)
+{
+  if(sbuf->len == 0)
+    return;
+
+  while(sbuf->len > 0 && strchr(list, sbuf->buff[sbuf->len-1]) != NULL)
+    sbuf->len--;
+
+  sbuf->buff[sbuf->len] = '\0';
 }
 
 /**************************/
@@ -821,6 +916,7 @@ char* string_next_nonwhitespace(const char* s)
   return NULL;
 }
 
+// Strip whitespace the the start and end of a string.  
 // Strips whitepace from the end of the string with \0, and returns pointer to
 // first non-whitespace character
 char* string_trim(char* str)

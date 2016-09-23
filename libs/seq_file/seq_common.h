@@ -40,13 +40,13 @@ struct SeqFile
 {
   const char *path;
 
-  gzFile *gz_file; // for reading FASTA/FASTQ/plain
-  samfile_t *sam_file; // For reading SAM/BAM
+  // for reading FASTA/FASTQ/plain
+  gzFile gz_file;
 
   // For reading sam/bams
+  samFile *sam_file;
   bam1_t *bam;
-
-  char fastq_ascii_offset; // defaults to 33
+  bam_hdr_t *sam_header;
 
   enum SeqFileType file_type;
 
@@ -87,9 +87,6 @@ struct SeqFile
   WriteState write_state;
 };
 
-// Array for complementing bases read from BAM/SAM files
-int8_t seq_comp_table[16];
-
 // Write output MACROs
 // wrapper for fputs/gzputs
 #define seq_puts(f,str) (size_t) \
@@ -101,6 +98,21 @@ int8_t seq_comp_table[16];
 ((f)->plain_file != NULL \
   ? (size_t)fwrite((str), sizeof(char), (size_t)(len), (f)->plain_file) \
   : (size_t)gzwrite((f)->gz_file, (str), (unsigned int)(len)))
+
+#define seq_getc(seq) ((seq)->plain_file != NULL ? fgetc((seq)->plain_file) \
+                                                 : gzgetc((seq)->gz_file))
+
+#define seq_ungetc(c,seq) ((seq)->plain_file != NULL \
+  ? ungetc((c),(seq)->plain_file) \
+  : gzungetc((c),(seq)->gz_file))
+
+#define seq_readline(sbuf,seq) ((seq)->plain_file != NULL \
+  ? strbuf_readline((sbuf), (seq)->plain_file) \
+  : strbuf_gzreadline((sbuf), (seq)->gz_file))
+
+#define seq_skip_line(seq) ((seq)->plain_file != NULL \
+  ? strbuf_skip_line((seq)->plain_file) \
+  : strbuf_gzskip_line((seq)->gz_file))
 
 #define MIN(x,y) ((x) <= (y) ? (x) : (y))
 
