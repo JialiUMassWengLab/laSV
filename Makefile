@@ -58,11 +58,10 @@ ifeq ($(UNAME),Darwin)
 endif
 
 # Library paths
-IDIR_GSL = libs/gsl-1.15
-IDIR_GSL_ALSO = libs/gsl-1.15/gsl
 IDIR_STRS = libs/string_buffer
 IDIR_SEQ = libs/seq_file
 IDIR_BAM = libs/samtools-0.1.18
+IDIR_HTS = libs/htslib/htslib
 
 # Main program includes
 IDIR_BASIC = include/basic
@@ -114,13 +113,14 @@ else
 	OPT := -O3 $(OPT)
 endif
 
-LIBLIST = -lseqfile -lhts -lbam -lstrbuf -lz -lm
+LIBLIST = -lseqfile -lhts -lstrbuf -lz -lm
 TEST_LIBLIST = -lcunit -lncurses $(LIBLIST)
 
 # Add -L/usr/local/lib/ to satisfy some systems that struggle to link libz
 LIBINCS = -L/usr/local/lib -I$(IDIR_BAM) \
-          -I$(IDIR_SEQ) -I$(IDIR_STRS) \
-          -L$(IDIR_BAM) -L$(IDIR_SEQ) -L$(IDIR_STRS)
+          -I$(IDIR_SEQ) -I$(IDIR_STRS) -I$(IDIR_HTS) \
+          -L$(IDIR_BAM) -L$(IDIR_SEQ) -L$(IDIR_STRS) \
+	  -L$(IDIR_HTS)
 
 TEST_LIBINCS = -I$(IDIR_CUNIT) -L$(LDIR_CUNIT) $(LIBINCS)
 
